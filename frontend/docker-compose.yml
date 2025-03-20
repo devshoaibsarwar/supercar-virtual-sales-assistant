@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+  backend:
+    image: "supercar-assistant-backend"  # Assuming backend Docker image is already built
+    ports:
+      - "8000:8000"

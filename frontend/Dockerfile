@@ -1,31 +1,28 @@
-FROM node:20.10-alpine
+FROM node:16 AS build
 
+# Set the working directory in the container
 WORKDIR /app
 
-#remove .next and node_modules
-RUN rm -rf .next node_modules
-
-# Copy package files
+# Copy package.json and package-lock.json first (to leverage caching)
 COPY package*.json ./
-COPY package-lock.json ./
 
 # Install dependencies
-RUN npm cache clean --force && \
-    npm i
+RUN npm install
 
-# Copy source code
+# Copy the rest of the application code
 COPY . .
 
-# Build the application
-ARG NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+# Build the React app for production
+RUN npm run build
 
-ARG APP_PASSWORD
-ENV APP_PASSWORD=${APP_PASSWORD}
+# Serve the React app
+FROM nginx:alpine
 
-ARG OPENAI_API_KEY
-ENV OPENAI_API_KEY=${OPENAI_API_KEY}
+# Copy the build folder from the build stage to Nginx's default html folder
+COPY --from=build /app/build /usr/share/nginx/html
 
-EXPOSE 3000
+# Expose port 80 for the web server
+EXPOSE 80
 
-CMD ["npm", "run", "dev"]
+# Run Nginx to serve the app
+CMD ["nginx", "-g", "daemon off;"]
