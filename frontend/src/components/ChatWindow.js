@@ -1,15 +1,29 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSSE } from '../hooks/useSSE';
 import MessageBubble from './MessageBubble';
 import ToolOutput from './ToolOutput';
 
 const ChatWindow = ({ sessionId }) => {
   const [query, setQuery] = useState('');
-  const { messages, loading } = useSSE(query, sessionId);
+  const [debouncedQuery, setDebouncedQuery] = useState(query);
+  const { messages, loading } = useSSE(debouncedQuery, sessionId);
+
+  // Debounce the query input to avoid sending too many requests to the backend
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (query.trim()) {
+        setDebouncedQuery(query);
+      }
+    }, 1500); // Delay of 500ms after the user stops typing
+
+    // Cleanup the timer when query changes or the component unmounts
+    return () => clearTimeout(timer);
+  }, [query]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (query.trim()) {
+      // Reset query after submission
       setQuery('');
     }
   };

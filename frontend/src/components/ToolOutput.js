@@ -27,7 +27,13 @@ const ToolOutput = ({ output, type }) => {
         </div>
       );
     default:
-      return null;
+      // In case of an unrecognized type, display the output directly
+      return (
+        <div>
+          <h3>Response from the Backend:</h3>
+          <pre>{JSON.stringify(output, null, 2)}</pre>
+        </div>
+      );
   }
 };
 
